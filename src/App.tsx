@@ -12,7 +12,7 @@ export default function App() {
 
   useEffect(() => {
     // Note: Replace with your actual Django production URL if different
-    axios.get('http://127.0.0.1:8000/')
+    axios.get('74.220.48.0/24')
       .then(res => setGames(res.data))
       .catch(err => console.error("Connection Error:", err));
   }, []);
@@ -43,7 +43,7 @@ export default function App() {
     e.preventDefault();
     setIsPaying(true);
     try {
-      const response = await axios.post('http://127.0.0pay/', { phone: phoneNumber });
+      const response = await axios.post('74.220.48.0/24/pay/', { phone: phoneNumber });
       if (response.status === 200) {
         alert("Check your phone for the M-Pesa prompt!");
         setIsModalOpen(false);
