@@ -23,7 +23,9 @@ function GameAnalysisApp() {
       const res = await axios.get(`https://smartbet-backend-mgqo.onrender.com/pay/`);
       return res.data;
     },
-    refetchInterval: 30000,
+    staleTime: 1000 * 60 * 5,       // Data stays "fresh" for 5 minutes
+    refetchInterval: 1000 * 60 * 10, // Only auto-refresh every 10 mins (was 30s)
+    refetchOnWindowFocus: false,     // Stop fetching when user switches tabs
   });
 
   const gamesList = data?.games || [];
