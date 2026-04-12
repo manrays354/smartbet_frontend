@@ -4,12 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trophy, Lock, Crown, Zap, ShieldCheck, ChevronRight, 
   Phone, X, Mail, Twitter, Instagram, Send, AlertTriangle, 
-  CheckCircle2, TrendingUp, Calendar, History, RefreshCw
+  CheckCircle2, TrendingUp, Calendar, History
 } from 'lucide-react';
 import axios from 'axios';
 
 const queryClient = new QueryClient();
-const API_BASE_URL = 'https://onrender.com';
+const API_BASE_URL = 'https://smartbet-backend-mgqo.onrender.com';
 
 function GameAnalysisApp() {
   const [view, setView] = useState<'today' | 'history'>('today');
@@ -17,19 +17,13 @@ function GameAnalysisApp() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
 
-  // OPTIMIZED QUERY: "Cages" the app to prevent server stress
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/`);
+      const res = await axios.get(`https://smartbet-backend-mgqo.onrender.com/pay/`);
       return res.data;
     },
-    // --- CACHING STRATEGY ---
-    staleTime: 1000 * 60 * 5,       // Data is "fresh" for 5 mins (prevents re-fetch on tab/view switch)
-    gcTime: 1000 * 60 * 30,          // Keep data in cache for 30 mins
-    refetchInterval: 1000 * 60 * 15, // Auto-refresh only every 15 mins (was 30s)
-    refetchOnWindowFocus: false,     // DO NOT fetch when user clicks back into the tab
-    refetchOnReconnect: true,        // Only fetch if internet was lost and recovered
+    refetchInterval: 30000,
   });
 
   const gamesList = data?.games || [];
@@ -62,18 +56,13 @@ function GameAnalysisApp() {
     e.preventDefault();
     setIsPaying(true);
     try {
-      await axios.post(`${API_BASE_URL}/pay/`, { phone: phoneNumber });
+      await axios.post(`https://smartbet-backend-mgqo.onrender.com/pay/`, { phone: phoneNumber });
       alert("M-Pesa STK Push Sent! Enter PIN.");
       setIsModalOpen(false);
     } catch (err) { alert("Try again."); } finally { setIsPaying(false); }
   };
 
-  if (isLoading && !data) return (
-    <div className="h-screen flex flex-col items-center justify-center bg-[#fcfcfd]">
-      <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <div className="font-black text-slate-400 text-[10px] tracking-[0.3em] uppercase">Syncing Board...</div>
-    </div>
-  );
+  if (isLoading && !data) return <div className="h-screen flex items-center justify-center font-black text-slate-200 animate-pulse text-[10px] tracking-[0.3em]">SYNCING...</div>;
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] font-sans text-slate-900 flex flex-col">
@@ -82,15 +71,10 @@ function GameAnalysisApp() {
           <Trophy className="text-amber-500 w-5 h-5" strokeWidth={3} />
           <h1 className="text-lg font-black tracking-tighter uppercase italic">SmartBets <span className="text-amber-500">Pro</span></h1>
         </div>
-        
-        {/* Manual Refresh Button: Better than auto-polling for the server */}
-        <button 
-          onClick={() => refetch()} 
-          disabled={isFetching}
-          className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-        >
-          <RefreshCw size={18} className={`text-slate-400 ${isFetching ? 'animate-spin text-amber-500' : ''}`} />
-        </button>
+        <div className="hidden sm:flex items-center gap-2 bg-green-50 border border-green-100 px-3 py-1 rounded-full">
+          <TrendingUp size={12} className="text-green-600" />
+          <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">94% ACCURACY</span>
+        </div>
       </nav>
 
       <main className="max-w-xl mx-auto w-full px-4 py-8 flex-grow">
@@ -113,107 +97,123 @@ function GameAnalysisApp() {
           <button onClick={() => setView('history')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${view === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}>Results</button>
         </div>
 
-        {filteredAndGrouped.length === 0 ? (
-            <div className="text-center py-20 text-slate-400 font-bold uppercase text-[10px] tracking-widest">No games available for this section</div>
-        ) : (
-          filteredAndGrouped.map(([date, segments]) => (
-            <div key={date} className="mb-14">
-              <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8 text-center">{date}</h3>
-              
-              <div className="space-y-6">
-                {/* PRO SECTION */}
-                {segments.pro.map((game: any) => {
-                  const isLocked = !hasPaidToday && view === 'today';
-                  return (
-                    <div 
-                      key={game.id} 
-                      onClick={() => isLocked && setIsModalOpen(true)}
-                      className={`rounded-[2.2rem] border p-6 transition-all cursor-pointer ${isLocked ? 'bg-slate-900 text-white shadow-xl hover:scale-[1.01]' : 'bg-white border-slate-100 shadow-sm'}`}
-                    >
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-[9px] font-black px-2.5 py-1 rounded-lg uppercase bg-amber-500 text-slate-900">VIP</span>
-                        {!isLocked ? (
-                          <span className="text-amber-500 font-black text-sm">{game.odds}</span>
-                        ) : (
-                          <span className="text-slate-500 font-black text-[9px] uppercase tracking-widest bg-white/5 px-2 py-1 rounded flex items-center gap-1">
-                            <Lock size={10}/> Odds Hidden
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="text-lg font-bold mb-5 italic tracking-tight">{game.title}</h4>
-                      <div className={`p-5 rounded-3xl border ${isLocked ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
-                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1 tracking-widest">Expert Verdict</p>
-                        <p className={`font-black text-lg ${isLocked ? 'text-amber-500 blur-md select-none' : 'text-slate-700 italic'}`}>
-                          {isLocked ? "LOCKED_WINNER" : game.predicted_outcome}
-                        </p>
-                      </div>
-                      {isLocked && (
-                          <div className="mt-4 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                              Click card to reveal slip
-                          </div>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {/* FREE SECTION */}
-                {segments.free.map((game: any) => (
-                  <div key={game.id} className="bg-white border border-slate-100 rounded-[2.2rem] p-6 shadow-sm">
+        {filteredAndGrouped.map(([date, segments]) => (
+          <div key={date} className="mb-14">
+            <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-8 text-center">{date}</h3>
+            
+            <div className="space-y-6">
+              {/* PRO SECTION: CLICKABLE TO UNLOCK */}
+              {segments.pro.map((game) => {
+                const isLocked = !hasPaidToday && view === 'today';
+                return (
+                  <div 
+                    key={game.id} 
+                    onClick={() => isLocked && setIsModalOpen(true)}
+                    className={`rounded-[2.2rem] border p-6 transition-all cursor-pointer ${isLocked ? 'bg-slate-900 text-white shadow-xl hover:scale-[1.02]' : 'bg-white border-slate-100 shadow-sm'}`}
+                  >
                     <div className="flex justify-between items-center mb-4">
-                      <span className="bg-slate-100 text-slate-500 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest">Free Board</span>
-                      <span className="text-blue-600 font-black text-sm">{game.odds}</span>
-                    </div>
-                    <h4 className="text-lg font-bold text-slate-800 mb-5 italic leading-tight">{game.title}</h4>
-                    <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex justify-between items-center">
-                      <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1 tracking-widest">Prediction</p>
-                        <p className="font-black text-slate-700 italic">{game.predicted_outcome}</p>
-                      </div>
-                      {view === 'history' && (
-                          <CheckCircle2 className="text-green-500" size={20} />
+                      <span className="text-[9px] font-black px-2.5 py-1 rounded-lg uppercase bg-amber-500 text-slate-900">VIP</span>
+                      {!isLocked ? (
+                        <span className="text-amber-500 font-black text-sm">{game.odds}</span>
+                      ) : (
+                        <span className="text-slate-700 font-black text-[9px] uppercase tracking-widest bg-white/5 px-2 py-1 rounded flex items-center gap-1">
+                          <Lock size={10}/> Odds Hidden
+                        </span>
                       )}
                     </div>
+                    <h4 className="text-lg font-bold mb-5 italic tracking-tight">{game.title}</h4>
+                    <div className={`p-5 rounded-3xl border ${isLocked ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-1 tracking-widest">Expert Verdict</p>
+                      <p className={`font-black text-lg ${isLocked ? 'text-amber-500 blur-md select-none' : 'text-slate-700 italic'}`}>
+                        {isLocked ? "LOCKED_WINNER" : game.predicted_outcome}
+                      </p>
+                    </div>
+                    {isLocked && (
+                        <div className="mt-4 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                            Click card to reveal slip
+                        </div>
+                    )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
+
+              {/* FREE SECTION */}
+              {segments.free.map((game) => (
+                <div key={game.id} className="bg-white border border-slate-100 rounded-[2.2rem] p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="bg-slate-100 text-slate-500 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest">Free Board</span>
+                    <span className="text-blue-600 font-black text-sm">{game.odds}</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-800 mb-5 italic leading-tight">{game.title}</h4>
+                  <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex justify-between items-center">
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Expert Verdict</p>
+                      <p className="font-bold text-slate-700 text-lg uppercase tracking-tight">{game.predicted_outcome}</p>
+                    </div>
+                    <CheckCircle2 className="text-green-500 w-5 h-5" />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </main>
 
-      {/* PAYMENT MODAL (Omitted for brevity, but stays same) */}
+      <footer className="bg-[#0f172a] text-white pt-20 pb-12 px-6 md:px-16 mt-auto">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
+          <div>
+            <h2 className="text-lg font-black uppercase italic text-amber-500 mb-6">SmartBets Pro</h2>
+            <p className="text-slate-400 text-xs font-medium leading-relaxed">Daily Banker slips and professional intelligence for Kenyan winners.</p>
+          </div>
+          <div>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Navigator</h3>
+            <ul className="space-y-3 text-xs font-bold text-slate-300">
+              <li className="cursor-pointer" onClick={() => setView('today')}>Today's Banker</li>
+              <li className="cursor-pointer" onClick={() => setView('history')}>Results</li>
+            </ul>
+          </div>
+          <div>
+             <div className="bg-[#1e293b] rounded-[2rem] p-8 border border-slate-800">
+                <p className="text-[10px] text-slate-400 mb-4 font-bold uppercase flex items-center justify-center gap-2"><Send size={14} className="text-blue-400" /> Telegram</p>
+                <a href="https://t.me/+gCsNNSQh8QMwOTZk" target="_blank" rel="noreferrer" className="w-full bg-[#0088cc] text-white font-black py-3 rounded-2xl text-[10px] uppercase flex items-center justify-center">JOIN NOW</a>
+             </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-center md:justify-start gap-2 text-amber-500 mb-4 font-black text-[10px] uppercase"><AlertTriangle size={14}/> 18+ Only</div>
+            <p className="text-[9px] text-slate-600 uppercase tracking-widest mt-10">© 2026 SmartBets Pro</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* MPESA MODAL */}
       <AnimatePresence>
         {isModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex items-end sm:items-center justify-center p-4">
-             {/* Modal Content */}
-             <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 relative overflow-hidden">
-                <button onClick={() => setIsModalOpen(false)} className="absolute right-6 top-6 text-slate-300 hover:text-slate-900"><X size={24}/></button>
-                <div className="mb-8">
-                  <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-4 text-amber-600"><Crown size={24}/></div>
-                  <h3 className="text-2xl font-black italic uppercase leading-none">VIP Access</h3>
-                  <p className="text-slate-500 text-xs mt-2 font-medium">Unlock all daily banker tips and high-odds slips instantly.</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-900/95 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl relative border-t-8 border-green-500">
+              <button onClick={() => setIsModalOpen(false)} className="absolute right-6 top-6 text-slate-300"><X size={20}/></button>
+              <div className="text-center mb-8 pt-4">
+                <Phone size={32} className="mx-auto text-green-600 mb-4" />
+                <h3 className="text-xl font-black text-slate-900 uppercase italic">M-PESA VIP</h3>
+                <p className="text-slate-400 text-[10px] font-black uppercase mt-2">Unlock Banker Board • KES 200</p>
+              </div>
+              <form onSubmit={handlePayment} className="space-y-4">
+                <div className="relative">
+                   <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg">254</span>
+                   <input required type="tel" placeholder="7XXXXXXXX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-16 pr-4 text-xl font-black outline-none focus:border-green-500 transition-all" />
                 </div>
-                <form onSubmit={handlePayment} className="space-y-4">
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">M-Pesa Number</label>
-                    <div className="flex items-center gap-3">
-                      <Phone size={16} className="text-slate-300""")/>>
-                      <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="0712345678" required className="bg-transparent w-full font-bold text-slate-800 outline-none placeholder:text-slate-300" />
-                    </div>
-                  </div>
-                  <button type="submit" disabled={isPaying} className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl text-xs uppercase shadow-xl hover:bg-slate-800 transition-colors">
-                    {isPaying ? "Sending Prompt..." : "Pay KSH 50 Now"}
-                  </button>
-                </form>
-             </motion.div>
-          </motion.div>
+                <button disabled={isPaying} type="submit" className="w-full bg-green-600 text-white font-black py-5 rounded-2xl shadow-xl uppercase text-xs">
+                  {isPaying ? "Sending Push..." : "Confirm & Unlock"}
+                </button>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
   );
 }
 
-// Wrapper to provide Query Client
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
