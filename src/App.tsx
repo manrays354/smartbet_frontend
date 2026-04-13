@@ -20,7 +20,7 @@ function GameAnalysisApp() {
   const { data, isLoading } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
-      const res = await axios.get(`https://smartbet-backend-mgqo.onrender.com`);
+      const res = await axios.get(`${API_BASE_URL}`);
       return res.data;
     },
     staleTime: 1000 * 60 * 5,       // Data stays "fresh" for 5 minutes
@@ -64,7 +64,7 @@ function GameAnalysisApp() {
     } catch (err) { alert("Try again."); } finally { setIsPaying(false); }
   };
 
-  if (isLoading && !data) return <div className="h-screen flex items-center justify-center font-black text-slate-200 animate-pulse text-[10px] tracking-[0.3em]">SYNCING...</div>;
+  if (isLoading && !data) return <div className="h-screen flex items-center justify-center font-black text-slate-200 animate-pulse text-[10px] tracking-[0.3em]">LOADING...</div>;
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] font-sans text-slate-900 flex flex-col">
