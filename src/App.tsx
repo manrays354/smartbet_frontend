@@ -20,7 +20,7 @@ function GameAnalysisApp() {
   const { data, isLoading } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
-      const res = await axios.get(`https://smartbet-backend-mgqo.onrender.com/pay/`);
+      const res = await axios.get(`https://smartbet-backend-mgqo.onrender.com`);
       return res.data;
     },
     staleTime: 1000 * 60 * 5,       // Data stays "fresh" for 5 minutes
@@ -58,7 +58,7 @@ function GameAnalysisApp() {
     e.preventDefault();
     setIsPaying(true);
     try {
-      await axios.post(`https://smartbet-backend-mgqo.onrender.com/pay/`, { phone: phoneNumber });
+      await axios.post(`https://smartbet-backend-mgqo.onrender.com`, { phone: phoneNumber });
       alert("M-Pesa STK Push Sent! Enter PIN.");
       setIsModalOpen(false);
     } catch (err) { alert("Try again."); } finally { setIsPaying(false); }
