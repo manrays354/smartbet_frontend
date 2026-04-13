@@ -58,7 +58,7 @@ function GameAnalysisApp() {
     e.preventDefault();
     setIsPaying(true);
     try {
-      await axios.post(`https://smartbet-backend-mgqo.onrender.com/api/initiate_payment/`, { phone: phoneNumber });
+      await axios.post(`https://smartbet-backend-mgqo.onrender.com`, { phone: phoneNumber });
       alert("M-Pesa STK Push Sent! Enter PIN.");
       setIsModalOpen(false);
     } catch (err) { alert("Try again."); } finally { setIsPaying(false); }
