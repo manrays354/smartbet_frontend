@@ -56,7 +56,7 @@ export default function App() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['games', currentPhone],
     queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/`, { params: { phone: currentPhone } });
+      const res = await axios.get(`${API_BASE_URL}`, { params: { phone: currentPhone } });
       return res.data;
     },
   });
@@ -66,7 +66,7 @@ export default function App() {
     try {
       localStorage.setItem('userPhone', phone);
       // Ensure path matches your Django urls.py exactly
-      await axios.post(`${API_BASE_URL}/pay/`, { phone }); 
+      await axios.post(`${API_BASE_URL}/pay`, { phone }); 
       alert("STK Push Sent! Check your phone.");
       setIsModalOpen(false);
       setTimeout(() => refetch(), 10000); // Check status after 10s
