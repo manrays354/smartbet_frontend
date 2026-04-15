@@ -23,7 +23,7 @@ export default function App() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['games', phoneNumber],
     queryFn: async () => {
-      const res = await axios.get(`${API_BASE_URL}/api/games/`, {
+      const res = await axios.get(`${API_BASE_URL}`, {
         params: { phone: phoneNumber }
       });
       return res.data;
