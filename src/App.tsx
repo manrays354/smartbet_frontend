@@ -4,7 +4,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Trophy, Lock, Crown, Zap, ChevronRight, Phone, X, RefreshCw } from 'lucide-react';
 
-const API_BASE_URL = 'https://onrender.com';
+const API_BASE_URL = 'https://smartbet-backend-mgqo.onrender.com';
 
 const PaymentModal = memo(({ isOpen, onClose, onPay, isPaying }: any) => {
   const [localPhone, setLocalPhone] = useState('');
